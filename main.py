@@ -2,20 +2,21 @@ import os
 import asyncio
 from datetime import datetime
 from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.filters import Command
 
 # Токен из переменной окружения
-TOKEN=8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg
-ADMIN_IDS=495452574
+TOKEN = "8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg"
+ADMIN_IDS = [123456789, 987654321]  # 495452574
+
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher(bot)
+dp = Dispatcher()
 
 tasks = {}  # {message_id: {"task": str, "user": str or None, "time": datetime}}
 
 # Создание новой задачи
-@dp.message_handler(commands=["task"])
+@dp.message(Command(commands=["task"]))
 async def create_task(message: types.Message):
     if message.from_user.id not in ADMIN_IDS:
         await message.reply("❌ Только администраторы могут создавать задачи.")
@@ -26,8 +27,9 @@ async def create_task(message: types.Message):
         await message.reply("Напиши задачу после команды /task")
         return
 
-    kb = InlineKeyboardMarkup()
-    kb.add(InlineKeyboardButton(text="✅ Взять в работу", callback_data="take_task"))
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Взять в работу", callback_data="take_task")]
+    ])
 
     sent = await message.answer(
         f"📦 Новая задача:\n{text}\n\n🕒 Нужно взять в течение 15 минут!",
@@ -42,7 +44,7 @@ async def create_task(message: types.Message):
         await message.answer(f"⚠️ Задача не взята в работу:\n{text}")
 
 # Взятие задачи в работу
-@dp.callback_query_handler(lambda c: c.data == "take_task")
+@dp.callback_query(lambda c: c.data == "take_task")
 async def take_task(callback: types.CallbackQuery):
     msg = callback.message
     user = callback.from_user
@@ -65,7 +67,7 @@ async def take_task(callback: types.CallbackQuery):
         await msg.answer(f"⏰ @{user.username or user.first_name}, как прогресс по задаче:\n{tasks[msg.message_id]['task']}?")
 
 # Просмотр всех задач
-@dp.message_handler(commands=["tasks"])
+@dp.message(Command(commands=["tasks"]))
 async def show_tasks(message: types.Message):
     if not tasks:
         await message.reply("📭 Активных задач нет.")
@@ -78,6 +80,10 @@ async def show_tasks(message: types.Message):
     await message.reply(text)
 
 # Запуск бота
-if __name__ == '__main__':
-    executor.start_polling(dp)
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    as
+
 
