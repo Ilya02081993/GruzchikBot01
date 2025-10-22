@@ -1,19 +1,20 @@
+import os
+import asyncio
+from datetime import datetime
 from aiogram import Bot, Dispatcher, types
 from aiogram.utils import executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
-from aiogram.filters import Command
-from datetime import datetime
-import asyncio
-import os
 
-TOKEN = "8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg"
-ADMIN_IDS = [123456789, 987654321]
+# Токен из переменной окружения
+TOKEN = os.getenv("TOKEN")
+ADMIN_IDS = [123456789, 987654321]  # Замени на свои Telegram ID
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
 
 tasks = {}  # {message_id: {"task": str, "user": str or None, "time": datetime}}
 
+# Создание новой задачи
 @dp.message_handler(commands=["task"])
 async def create_task(message: types.Message):
     if message.from_user.id not in ADMIN_IDS:
@@ -35,10 +36,12 @@ async def create_task(message: types.Message):
 
     tasks[sent.message_id] = {"task": text, "user": None, "time": datetime.now()}
 
+    # Проверка через 15 минут
     await asyncio.sleep(15 * 60)
     if tasks.get(sent.message_id) and tasks[sent.message_id]["user"] is None:
         await message.answer(f"⚠️ Задача не взята в работу:\n{text}")
 
+# Взятие задачи в работу
 @dp.callback_query_handler(lambda c: c.data == "take_task")
 async def take_task(callback: types.CallbackQuery):
     msg = callback.message
@@ -56,10 +59,12 @@ async def take_task(callback: types.CallbackQuery):
 
     await callback.answer("Ты взял задачу!")
 
+    # Напоминание через 1 час
     await asyncio.sleep(60 * 60)
     if msg.message_id in tasks and tasks[msg.message_id]["user"] == (user.username or user.first_name):
         await msg.answer(f"⏰ @{user.username or user.first_name}, как прогресс по задаче:\n{tasks[msg.message_id]['task']}?")
 
+# Просмотр всех задач
 @dp.message_handler(commands=["tasks"])
 async def show_tasks(message: types.Message):
     if not tasks:
@@ -72,7 +77,7 @@ async def show_tasks(message: types.Message):
         text += f"{i}. {info['task']} — {user}\n"
     await message.reply(text)
 
+# Запуск бота
 if __name__ == '__main__':
     executor.start_polling(dp)
-
 
