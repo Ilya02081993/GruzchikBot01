@@ -70,7 +70,7 @@ async def show_tasks(message: types.Message):
         text += f"{i}. {info['task']} — {user}\n"
     await message.reply(text)
 
-if name == "__main__":
-    import asyncio
-    asyncio.run(dp.start_polling(bot))
+if __name__ == '__main__':
+    executor.start_polling(dp)
+
 
