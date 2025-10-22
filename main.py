@@ -6,8 +6,8 @@ from aiogram.utils import executor
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Токен из переменной окружения
-TOKEN = os.getenv("TOKEN")
-ADMIN_IDS = [123456789, 987654321]  # Замени на свои Telegram ID
+TOKEN=8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg
+ADMIN_IDS=495452574
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot)
