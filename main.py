@@ -1,17 +1,20 @@
 from aiogram import Bot, Dispatcher, types
-from aiogram.utils import executor  # ← важно!
+from aiogram.utils import executor
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.filters import Command
+from datetime import datetime
 import asyncio
 import os
 
 TOKEN = "8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg"
-ADMIN_IDS = [123456789, 987654321]  # 495452574
+ADMIN_IDS = [123456789, 987654321]
 
 bot = Bot(token=TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot)
 
 tasks = {}  # {message_id: {"task": str, "user": str or None, "time": datetime}}
 
-@dp.message(Command("task"))
+@dp.message_handler(commands=["task"])
 async def create_task(message: types.Message):
     if message.from_user.id not in ADMIN_IDS:
         await message.reply("❌ Только администраторы могут создавать задачи.")
@@ -22,12 +25,12 @@ async def create_task(message: types.Message):
         await message.reply("Напиши задачу после команды /task")
         return
 
-    kb = InlineKeyboardBuilder()
-    kb.button(text="✅ Взять в работу", callback_data="take_task")
+    kb = InlineKeyboardMarkup()
+    kb.add(InlineKeyboardButton(text="✅ Взять в работу", callback_data="take_task"))
 
     sent = await message.answer(
         f"📦 Новая задача:\n{text}\n\n🕒 Нужно взять в течение 15 минут!",
-        reply_markup=kb.as_markup()
+        reply_markup=kb
     )
 
     tasks[sent.message_id] = {"task": text, "user": None, "time": datetime.now()}
@@ -36,7 +39,7 @@ async def create_task(message: types.Message):
     if tasks.get(sent.message_id) and tasks[sent.message_id]["user"] is None:
         await message.answer(f"⚠️ Задача не взята в работу:\n{text}")
 
-@dp.callback_query(lambda c: c.data == "take_task")
+@dp.callback_query_handler(lambda c: c.data == "take_task")
 async def take_task(callback: types.CallbackQuery):
     msg = callback.message
     user = callback.from_user
@@ -57,7 +60,7 @@ async def take_task(callback: types.CallbackQuery):
     if msg.message_id in tasks and tasks[msg.message_id]["user"] == (user.username or user.first_name):
         await msg.answer(f"⏰ @{user.username or user.first_name}, как прогресс по задаче:\n{tasks[msg.message_id]['task']}?")
 
-@dp.message(Command("tasks"))
+@dp.message_handler(commands=["tasks"])
 async def show_tasks(message: types.Message):
     if not tasks:
         await message.reply("📭 Активных задач нет.")
