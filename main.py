@@ -1,8 +1,7 @@
-import asyncio
 from aiogram import Bot, Dispatcher, types
-from aiogram.filters import Command
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-from datetime import datetime, timedelta
+from aiogram.utils import executor  # ← важно!
+import asyncio
+import os
 
 TOKEN = "8329621184:AAE68wWxjTUsbLNorCPNZrtwDzWhAn3GbVg"
 ADMIN_IDS = [123456789, 987654321]  # 495452574
